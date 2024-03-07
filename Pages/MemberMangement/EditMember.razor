@@ -143,37 +143,6 @@
 </div>
 
 
-@* <div class="container mt-5">
-    <!-- Second Form -->
-    <form @onsubmit="UploadFiles" enctype="multipart/form-data">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="nidFile">NID File:</label>
-                    <img src="@GetDoceUrl(nid)" style="max-width: 300px;" />
-                    <InputFile id="nidFile" OnChange="@HandleNidFileChange" class="form-control-file" accept=".jpg,.jpeg,.png" />
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="form-group">
-                    <label for="utilityFile">Utility Bill File:</label>
-                    <img src="@GetDoceUrl(utility)" style="max-width: 300px;" />
-                    <InputFile id="utilityFile" OnChange="@HandleUtilityFileChange" class="form-control-file" accept=".jpg,.jpeg,.png" />
-                </div>
-            </div>
-        </div>
-        <br />
-        <br />
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Upload File</button>
-                    <button type="button" @onclick="UpdateFiles" class="btn btn-secondary">Update File</button>
-                </div>
-            </div>
-        </div>
-    </form>
-</div> *@
 
 @code {
     private Member member = new Member();
@@ -314,21 +283,6 @@
             errorMessage = "An error occurred while uploading files: " + ex.Message;
         }
     }
-
-
-    // private string NidFileName()
-    // {
-    //     string nidFilePath = nid;
-    //     string nidFileName = nidFilePath.Substring(nidFilePath.LastIndexOf("Nid_") + "Nid_".Length);
-    //     return nidFileName;
-    // }
-
-    // private string UtilityFileName()
-    // {
-    //     string utilityFilepath = utility;
-    //     string utilityFileName = utilityFilepath.Substring(utilityFilepath.LastIndexOf("UtilityBill_") + "UtilityBill_".Length);
-    //     return utilityFileName;
-    // }
 
 
     private string NidFileName()

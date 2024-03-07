@@ -1,0 +1,141 @@
+﻿@page "/fee-collection/add"
+@using Membership_Management_UI.Models
+@using Membership_Management_UI.Services
+@inject IMemberService mService
+@inject IFeeCollectionService fService
+@inject IJSRuntime jsRun
+
+
+<h3>Add Fee Collection</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+ <div class="mt-4">
+            <div class="row">
+                <div class="col-md-6">
+                    <form class="needs-validation" @onsubmit="SubmitForm" novalidate>
+                <div class="form-group">
+                    <label for="MemberId">Member</label>
+                    <input type="text" class="form-control" placeholder="Search members" @oninput="FilterMembers" />
+                    <select class="form-control mt-2" id="MemberId" @bind="feeCollection.MemberId" required>
+                        <option value="">Select a member</option>
+                        @foreach (var member in filteredMembers)
+                        {
+                            <option value="@member.MemberId">@member.Name</option>
+                        }
+                    </select>
+                    <div class="invalid-feedback">Please select a member.</div>
+                </div>
+
+                    
+
+                <div class="form-group">
+                    <label for="CollectionType">Collection Type</label>
+                    <select class="form-control" id="CollectionType" @bind="feeCollection.CollectionType" required>
+                        <option value="">Select Type</option>
+                        @foreach (var type in Enum.GetValues(typeof(ECollectType)))
+                        {
+                            <option value="@type.ToString()">@type</option>
+                        }
+                    </select>
+                    <div class="invalid-feedback">Please select a member.</div>
+                </div>
+                <div class="form-group">
+                    <label for="Amount">Amount</label>
+                    <input class="form-control" id="Amount" @bind="feeCollection.Amount" required>
+                    <div class="invalid-feedback">Please provide the amount.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+@code {
+
+    private FeeCollection feeCollection = new FeeCollection();
+    private List<Member> members = new List<Member>();
+    private List<Member> filteredMembers = new List<Member>();
+    private string errorMessage;
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            members = await mService.GetAllMembers();
+            filteredMembers = members;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error loading members: " + ex.Message;
+        }
+    }
+
+    private async Task SubmitForm()
+    {
+        if (IsValidForm())
+        {
+            try
+            {
+
+                await fService.PostFeeCollectionAsync(feeCollection);
+                await jsRun.InvokeVoidAsync("location.reload");
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "Error adding fee collection: " + ex.Message;
+            }
+        }
+    }
+
+    private bool IsValidForm()
+    {
+        var isValid = true;
+
+        if (string.IsNullOrWhiteSpace(feeCollection.CollectionDate.ToString()))
+        {
+            isValid = false;
+            errorMessage = "Please provide a collection date.";
+        }
+        else if (string.IsNullOrWhiteSpace(feeCollection.Amount.ToString()))
+        {
+            isValid = false;
+            errorMessage = "Please provide the amount.";
+        }
+        else if (feeCollection.MemberId == 0)
+        {
+            isValid = false;
+            errorMessage = "Please select a member.";
+        }
+
+        return isValid;
+    }
+
+    private void FilterMembers(ChangeEventArgs e)
+    {
+        string searchText = e.Value?.ToString() ?? "";
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            filteredMembers = members.Where(m => m.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        else
+        {
+            filteredMembers = members;
+        }
+    }
+
+    public enum ECollectType
+    {
+        Daily,
+        Monthly
+    }
+}

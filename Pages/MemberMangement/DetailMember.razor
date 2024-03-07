@@ -3,106 +3,9 @@
 @using Membership_Management_UI.Models
 @inject IMemberService mService
 @inject IDocumentService dService
+@inject IFeeCollectionService fService
 @inject IJSRuntime JsRuntime
 
-@* @if (member == null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    <div class="col-lg-3 text-right">
-        <a href="/allMember" role="button" class="btn btn-secondary btn-sm">Back to Member List</a>
-    </div>
-    <div class="container mt-5">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex">
-                <h4 class="card-title">Member Details</h4>
-            </div>
-
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <img src="@GetImageUrl(member.Photo)" class="img-fluid" alt="@member.Name" style="max-height: 300px; width: auto;" />
-                    </div>
-                    <div class="col-md-8">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Name: </strong>@member.Name</p>
-                                <p><strong>Phone: </strong>@member.Phone</p>
-                                <p><strong>Present Address: </strong>@member.PresentAddress</p>
-                                <p><strong>Permanent Address: </strong>@member.PermanentAddress</p>
-                                <p><strong>Date of Birth: </strong>@member.Dob</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Account Create Date: </strong>@member.CreateDate</p>
-                                <p><strong>Membership Activate Date: </strong>@member.ActivaitonDate</p>
-                                <p><strong>Membership Expire Date: </strong>@member.ExpDate</p>
-                                <p><strong>Membership Amount: </strong>@member.MembershipAmount</p>
-                                <p><strong>Status: </strong>@isActiveStatuses[member.IsActive ?? false]</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <a href="/editMember/@member.MemberId" class="btn btn-primary btn-sm mr-2">Edit</a>
-                                <button @onclick="@(() => ShowAlert("Sure to Delete??", member.MemberId))" class="btn btn-outline-danger btn-sm">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <br />
-
-
-    <div class="container mt-5">
-        <div class="card">
-            <div class="card-header bg-primary text-white d-flex">
-                <h4 class="card-title">Member Documents</h4>
-            </div>
-
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-5">
-                      <label for="updateNidFile">NID File:</label>
-                      @if (!string.IsNullOrEmpty(nid))
-                        {
-                            <label for="updateNidFile">@NidFileName()</label>
-                            <br />
-                            <button @onclick="DownloadNidFileFromURL">Download Nid PDF</button>
-
-                        }
-                        else
-                        {
-                            <p>Nid Not uploaded</p>
-                        }
-
-                      
-                    </div>
-                    <div class="col-md-5">
-                        @if (!string.IsNullOrEmpty(utility))
-                        {
-                            <label for="updateUtilityFile">Utility Bill File: </label>
-                            <img src="@GetDoceUrl(utility)" class="img-fluid" style="max-height: 200px; width: auto;" />
-                            <br />
-
-                            <br />
-                            <button @onclick="DownloadUtilityFileFromURL">Download Utility Bill Photo</button>
-                        }
-                        else
-                        {
-                            <p>Utility File Not uploaded</p>
-                        }
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-} *@
 
 @if (member == null)
 {
@@ -221,6 +124,55 @@ else
                 </div>
             </div>
         </div>
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex">
+                <h4 class="card-title">Fee Collected</h4>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" class="form-control" id="startDate" @bind="startDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="endDate">End Date</label>
+                            <input type="date" class="form-control" id="endDate" @bind="endDate">
+                        </div>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Collection Date</th>
+                                <th>Collection Type</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (filteredFeeCollections.Any())
+                            {
+                                @foreach (var feeCollection in filteredFeeCollections)
+                                {
+                                    <tr>
+                                        <td>@feeCollection.CollectionDate.ToShortDateString()</td>
+                                        <td>@feeCollection.CollectionType</td>
+                                        <td>@feeCollection.Amount</td>
+                                       
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4">No fee collections found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 }
 
@@ -236,10 +188,15 @@ else
     public int Id { get; set; }
 
     private Member member;
+    private List<FeeCollection> fee;
+
 
 
     [Inject]
     private NavigationManager navigation { get; set; }
+
+    private DateTime? startDate;
+    private DateTime? endDate;
 
 
     string nid;
@@ -252,6 +209,7 @@ else
         member = await mService.GetMember(Id);
         nid = await dService.GetNidOfMember(Id);
         utility = await dService.GetUtilityOfMember(Id);
+        fee = await fService.GetCollectedFeeById(Id);
 
     }
 
@@ -335,6 +293,27 @@ else
         var fileName = "myUtility.pdf";
         var fileURL = GetDoceUrl(utility);
         await JsRuntime.InvokeVoidAsync("triggerFileDownload", fileName, fileURL);
+    }
+
+
+    private List<FeeCollection> filteredFeeCollections
+    {
+        get
+        {
+            var filteredList = fee ?? new List<FeeCollection>();
+
+            if (startDate.HasValue)
+            {
+                filteredList = filteredList.Where(fc => fc.CollectionDate >= DateTime.Parse(startDate.ToString())).ToList();
+            }
+
+            if (endDate.HasValue)
+            {
+                filteredList = filteredList.Where(fc => fc.CollectionDate <= DateTime.Parse(endDate.ToString())).ToList();
+            }
+
+            return filteredList;
+        }
     }
 
 }

@@ -24,7 +24,7 @@ namespace Membership_Management_UI.Models
         public DateTime? ActionDate { get; set; }
 
         public virtual ICollection<Document>? DocumentList { get; set; }
-        //public virtual ICollection<FeeCollection>? FeeCollection { get; set; }
+        public virtual ICollection<FeeCollection>? FeeCollection { get; set; }
 
         [NotMapped]
         public IBrowserFile? ImageFile { get; set; }

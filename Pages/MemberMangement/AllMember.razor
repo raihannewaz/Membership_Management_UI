@@ -1,0 +1,144 @@
+﻿@page "/allMember"
+@using Membership_Management_UI.Services
+@using Membership_Management_UI.Models
+@inject IJSRuntime JsRuntime
+@inject HttpClient client
+@inject IConfiguration configuration
+
+
+<div class="row">
+    <div class="col-lg-9">
+        <h3>All Members</h3>
+    </div>
+    <div class="col-lg-3 text-right">
+        <a href="/addNewMember" role="button" class="btn btn-secondary btn-sm">Add New Member</a>
+    </div>
+</div>
+
+@if (members == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Photo</th>
+                <th>Name</th>
+                <th>Phone</th>  
+                <th>Membership Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (members.Any())
+            {
+                @foreach (var m in members)
+                {
+                    <tr>
+                        <td><img src="@GetImageUrl(m.Photo)" alt="@m.Name" style="max-width: 70px;" /></td>
+                        <td>@m.Name</td>
+                        <td>@m.Phone</td>
+                        <td>@m.MembershipAmount</td>
+                        <td>@isActiveStatuses[m.IsActive ?? false]</td>
+
+                        <td>
+                            <button @onclick="() => EditMember(m.MemberId)" class="edit-button">Edit
+                            </button>
+                            <button @onclick="@(() => ShowAlert("Sure to Delete??", m.MemberId))" class="btn-outline-danger">
+                                Delete
+                            </button>
+                            <a href="/member-details/@m.MemberId" class="btn btn-info btn-sm">Details</a>
+
+                        </td>
+
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6">No members found.</td>
+                </tr>
+            }
+
+
+        </tbody>
+    </table>
+}
+
+
+@code {
+    public List<Member> members;
+    private Member editMember;
+
+    [Inject]
+    private IMemberService service { get; set; }
+
+    [Inject]
+    private NavigationManager navigation { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        members = await service.GetAllMembers();
+    }
+
+    private async Task ShowAlert(string message, int id)
+    {
+        await JsRuntime.InvokeAsync<object>("alert", message);
+        DeleteMember(id);
+    }
+
+
+    public async void DeleteMember(int id)
+    {
+        try
+        {
+            await service.DeleteMember(id);
+            navigation.NavigateTo("/allMember", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error Delete Member: {ex.Message}");
+        }
+    }
+
+    private async void EditMember(int memberId)
+    {
+        navigation.NavigateTo($"/editMember/{memberId}");
+        try
+        {
+            editMember = await service.GetMember(memberId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading Member: {ex.Message}");
+        }
+    }
+
+
+    private readonly Dictionary<bool, string> isActiveStatuses = new Dictionary<bool, string>()
+    {
+        { true, "Active" },
+        { false, "Inactive" }
+    };
+
+
+    private string GetImageUrl(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            return "No Image";
+        }
+
+        string baseUrl = "http://localhost:10699/";
+        string fileName = Path.GetFileName(filePath);
+        return Path.Combine(baseUrl + "MemberImage/", fileName);
+    }
+
+}
+
+

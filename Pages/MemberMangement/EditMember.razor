@@ -1,0 +1,356 @@
+﻿@page "/editMember/{id:int}"
+
+@using System.Net.Http
+@using Membership_Management_UI.Models
+@using Membership_Management_UI.Services
+@inject HttpClient httpClient
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="row">
+    <div class="col-lg-9">
+        <h3>Edit Member</h3>
+    </div>
+    <div class="col-lg-3 text-right">
+        <a href="/allMember" role="button" class="btn btn-secondary btn-sm">Back to List</a>
+    </div>
+</div>
+
+<form @onsubmit="HandleValidSubmit" enctype="multipart/form-data">
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <input type="hidden" id="Name" @bind="member.MemberId" class="form-control" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="Name">Name:</label>
+                    <input id="Name" @bind="member.Name" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Phone">Phone:</label>
+                    <input id="Phone" @bind="member.Phone" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Address">Present Address:</label>
+                    <input id="Address" @bind="member.PresentAddress" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Address">Permanent Address:</label>
+                    <input id="Address" @bind="member.PermanentAddress" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Address">Date of Birth:</label>
+                    <input type="date" id="Address" @bind="member.Dob" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="MembershipAmount">Membership Amount:</label>
+                    <input id="MembershipAmount" @bind="member.MembershipAmount" class="form-control" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="ImageFile">Upload Image:</label>
+                    <div class="custom-file">
+                        <img src="@GetImageUrl(member.Photo)"  style="max-width: 100px;" />
+                        <InputFile id="ImageFile" OnChange="@HandleFileSelected" class="custom-file-input" accept=".jpg,.jpeg,.png" />
+                    </div>
+                </div>
+            </div>
+
+            <br />
+            <div class="form-group">
+                <label>Status:</label>
+                <input type="checkbox" @bind="member.IsActive" />
+
+            </div>
+            <br />
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+<br />
+<br />
+
+
+
+<h4>Member Document</h4>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+
+<div class="container mt-5">
+    <!-- Second Form -->
+    <form @onsubmit="UploadFiles" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-md-6">
+
+                @if (string.IsNullOrEmpty(nid) && string.IsNullOrEmpty(utility))
+                {
+                    <br />
+                    <div class="form-group">
+                          <label for="nidFile">Upload Nid File In pdf Format:</label>
+@*                         <img src="@GetDoceUrl(nid)" style="max-width: 200px;" /> *@
+                      @*   <label for="nidFile">@NidFileName()</label> *@
+                        <InputFile id="nidFile" OnChange="@HandleNidFileChange" class="form-control-file" accept=".pdf" />
+                    </div><br />
+                    <div class="form-group">
+                        <label for="utilityFile">Upload Utility File In jpg/jpeg/png Format:</label>
+                        @* <img src="@GetDoceUrl(utility)" style="max-width: 200px;" /> *@
+                        <InputFile id="utilityFile" OnChange="@HandleUtilityFileChange" class="form-control-file" accept=".jpg,.jpeg,.png" />
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Upload File</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+
+
+                        @if (!string.IsNullOrEmpty(nid) || !string.IsNullOrEmpty(utility))
+                        {
+                            <div class="form-group">
+                                <label for="updateNidFile">Update NID File:</label>
+                                @* <img src="@GetDoceUrl(nid)" style="max-width: 200px;" /> *@
+                                <label for="nidFile">@NidFileName()</label><br />
+                                <InputFile id="updateNidFile" OnChange="@HandleNidFileChange" class="form-control-file" accept=".pdf" />
+                            </div>
+                            <br />
+
+                            <div class="form-group">
+                                <label for="updateUtilityFile">Update Utility Bill File:</label>
+                                <img src="@GetDoceUrl(utility)" style="max-width: 200px;" />
+                                <InputFile id="updateUtilityFile" OnChange="@HandleUtilityFileChange" class="form-control-file" accept=".jpg,.jpeg,.png" />
+                            </div><br />
+                            <button type="button" @onclick="UpdateFiles" class="btn btn-secondary">Update File</button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+
+@* <div class="container mt-5">
+    <!-- Second Form -->
+    <form @onsubmit="UploadFiles" enctype="multipart/form-data">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="nidFile">NID File:</label>
+                    <img src="@GetDoceUrl(nid)" style="max-width: 300px;" />
+                    <InputFile id="nidFile" OnChange="@HandleNidFileChange" class="form-control-file" accept=".jpg,.jpeg,.png" />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="utilityFile">Utility Bill File:</label>
+                    <img src="@GetDoceUrl(utility)" style="max-width: 300px;" />
+                    <InputFile id="utilityFile" OnChange="@HandleUtilityFileChange" class="form-control-file" accept=".jpg,.jpeg,.png" />
+                </div>
+            </div>
+        </div>
+        <br />
+        <br />
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Upload File</button>
+                    <button type="button" @onclick="UpdateFiles" class="btn btn-secondary">Update File</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div> *@
+
+@code {
+    private Member member = new Member();
+
+    private Document document = new Document();
+
+    [Parameter]
+    public int id { get; set; }
+
+
+    [Inject]
+    private IMemberService mService { get; set; }
+
+    [Inject]
+    private IDocumentService dService { get; set; }
+
+
+    [Inject]
+    private NavigationManager navigation { get; set; }
+
+
+    string nid;
+    string utility;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        member = await mService.GetMember(id);
+        nid = await dService.GetNidOfMember(id);
+        utility = await dService.GetUtilityOfMember(id);
+
+    }
+
+    
+
+
+
+    private async Task HandleValidSubmit()
+    {
+        await mService.UpdateMember(id, member);
+        navigation.NavigateTo($"/member-details/{member.MemberId}");
+
+    }
+
+
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        member.ImageFile = e.File;
+    }
+
+    private readonly Dictionary<bool, string> isActiveStatuses = new Dictionary<bool, string>()
+    {
+        { true, "Active" },
+        { false, "Inactive" }
+    };
+
+
+    private string GetImageUrl(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            return "No Image";
+        }
+
+        string baseUrl = "http://localhost:10699/";
+        string fileName = Path.GetFileName(filePath);
+        return Path.Combine(baseUrl + "MemberImage/", fileName);
+    }
+
+
+    private string GetDoceUrl(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            return "No Image";
+        }
+
+        string baseUrl = "http://localhost:10699/";
+        string fileName = Path.GetFileName(filePath);
+        return Path.Combine(baseUrl + "DocumentImage/", fileName);
+    }
+
+
+
+
+
+    private string errorMessage;
+
+    private async Task HandleNidFileChange(InputFileChangeEventArgs e)
+    {
+        document.NidFile = e.File;
+    }
+
+    private async Task HandleUtilityFileChange(InputFileChangeEventArgs e)
+    {
+        document.UtilityFile = e.File;
+    }
+
+
+
+    [Inject]
+    protected IJSRuntime JSRuntime { get; set; }
+
+    private async Task UploadFiles()
+    {
+        try
+        {
+            if (document.NidFile == null)
+            {
+                errorMessage = "Please Upload NID first";
+
+            }
+            else
+            {
+                await dService.AddDocument(id, document);
+                await JSRuntime.InvokeVoidAsync("location.reload");
+            }
+        }
+       catch (Exception ex)
+        {
+            errorMessage = "An error occurred while uploading files: " + ex.Message;
+        }
+    }
+
+
+    private async Task UpdateFiles()
+    {
+        try
+        {
+            await dService.UpdateDocument(id, document);
+            await JSRuntime.InvokeVoidAsync("location.reload");
+            
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "An error occurred while uploading files: " + ex.Message;
+        }
+    }
+
+
+    // private string NidFileName()
+    // {
+    //     string nidFilePath = nid;
+    //     string nidFileName = nidFilePath.Substring(nidFilePath.LastIndexOf("Nid_") + "Nid_".Length);
+    //     return nidFileName;
+    // }
+
+    // private string UtilityFileName()
+    // {
+    //     string utilityFilepath = utility;
+    //     string utilityFileName = utilityFilepath.Substring(utilityFilepath.LastIndexOf("UtilityBill_") + "UtilityBill_".Length);
+    //     return utilityFileName;
+    // }
+
+
+    private string NidFileName()
+    {
+        if (string.IsNullOrEmpty(nid))
+        {
+            return string.Empty;
+        }
+
+        string nidFileName = nid.Substring(nid.LastIndexOf("Nid_") + "Nid_".Length);
+        return nidFileName;
+    }
+
+    private string UtilityFileName()
+    {
+        if (string.IsNullOrEmpty(utility))
+        {
+            return string.Empty;
+        }
+
+        string utilityFileName = utility.Substring(utility.LastIndexOf("UtilityBill_") + "UtilityBill_".Length);
+        return utilityFileName;
+    }
+
+}

@@ -33,6 +33,11 @@ namespace Membership_Management_UI
                 s.BaseAddress = new Uri(@"https://localhost:44349/");
             });
 
+            builder.Services.AddHttpClient<IPackageService, PackageService>(s =>
+            {
+                s.BaseAddress = new Uri(@"https://localhost:44349/");
+            });
+
 
 
             builder.Services.AddFileReaderService();

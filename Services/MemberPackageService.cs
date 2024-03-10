@@ -35,9 +35,9 @@ namespace Membership_Management_UI.Services
             return await _httpClient.GetFromJsonAsync<List<MemberPackage>>("api/MemberPackage"); ;
         }
 
-        public async Task<MemberPackage> GetById(int id)
+        public async Task<List<MemberPackage>> GetById(int id)
         {
-            return await _httpClient.GetFromJsonAsync<MemberPackage>($"api/MemberPackage/{id}");
+            return await _httpClient.GetFromJsonAsync<List<MemberPackage>>($"api/MemberPackage/{id}");
         }
 
         public async Task<MemberPackage> Update(int id, MemberPackage entity)

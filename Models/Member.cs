@@ -6,7 +6,7 @@ namespace Membership_Management_UI.Models
 {
     public class Member
     {
-        [Key]
+
         public int MemberId { get; set; }
         public string? Name { get; set; }
         public int? Phone { get; set; }

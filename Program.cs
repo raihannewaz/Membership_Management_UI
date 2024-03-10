@@ -43,6 +43,11 @@ namespace Membership_Management_UI
                 s.BaseAddress = new Uri(@"https://localhost:44349/");
             });
 
+            builder.Services.AddHttpClient<IPaymentService, PaymentService>(s =>
+            {
+                s.BaseAddress = new Uri(@"https://localhost:44349/");
+            });
+
 
 
             builder.Services.AddFileReaderService();

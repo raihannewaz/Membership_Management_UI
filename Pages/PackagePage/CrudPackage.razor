@@ -32,11 +32,11 @@
             <label for="duration">Duration</label>
             <InputNumber id="duration" class="form-control" @bind-Value="selectedPackage.Duration" TValue="int?" />
         </div>
-
         <div class="form-group">
             <label for="isActive">Is Active</label>
-            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="selectedPackage.IsActive" />
+            <input id="isActive" type="checkbox" class="form-check-input" @bind="selectedPackage.IsActive" />
         </div>
+
 
         <br /><br />
         <button type="submit" class="btn btn-primary">@((selectedPackage != null) ? "Update" : "Add")</button>
@@ -69,7 +69,7 @@
                     <td>@package.PackagePrice</td>
                     <td>@package.PaymentType</td>
                     <td>@package.Duration</td>
-                    <td>@isActiveStatuses[package.IsActive]</td>
+                    <td>@isActiveStatuses[package.IsActive ?? false]</td>
                     <td>
                         <button class="btn btn-primary" @onclick="() =>  EditPackage(package)">Edit</button>
                         <button class="btn btn-danger" @onclick="() =>  DeletePackage(package.PackageId)">Delete</button>

@@ -1,0 +1,108 @@
+﻿@page "/addMemberPackage"
+@using Membership_Management_UI.Models
+@using Membership_Management_UI.Services
+@inject IMemberPackageService memberPackageService
+@inject IMemberService memberService
+@inject IPackageService packageService
+@inject IJSRuntime jsRuntime
+
+<h3>Add Member Package</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+<div class="mt-4">
+    <form @onsubmit="HandleMemberPackage">
+        <div class="form-group">
+            <label for="searchMember">Search Member:</label>
+            <input id="searchMember" type="text" class="form-control" @oninput="FilterMembers" />
+        </div>
+
+        <div class="form-group">
+            <label for="memberId">Member:</label>
+            <select id="memberId" class="form-control" @bind="mpack.MemberID">
+                <option value="">-- Select Member --</option>
+                @foreach (var member in filteredMembers)
+                {
+                    <option value="@member.MemberId">@member.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="packageId">Package:</label>
+            <select id="packageId" class="form-control" @bind="mpack.PackageID">
+                <option value="">-- Select Package --</option>
+                @foreach (var package in packages)
+                {
+                    <option value="@package.PackageId">@package.PackageName</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity:</label>
+            <input id="quantity" type="number" class="form-control" @bind="mpack.Quantity" />
+        </div>
+
+        <div class="form-group">
+            <label for="isActive">Is Active:</label>
+            <input id="isActive" type="checkbox" class="form-check-input" @bind="mpack.IsActive" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Member Package</button>
+    </form>
+</div>
+
+@code {
+    private List<Member> members = new List<Member>();
+    private List<Package> packages = new List<Package>();
+    private List<Member> filteredMembers = new List<Member>();
+    private MemberPackage mpack = new MemberPackage();
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            members = await memberService.GetAllMembers();
+            packages = await packageService.GetAll();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error loading data: " + ex.Message;
+        }
+    }
+
+    private async Task HandleMemberPackage()
+    {
+        try
+        {
+
+            await memberPackageService.Add(mpack);
+            await jsRuntime.InvokeVoidAsync("location.reload");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error adding member package: " + ex.Message;
+        }
+    }
+
+    private void FilterMembers(ChangeEventArgs e)
+    {
+        string searchText = e.Value?.ToString() ?? "";
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            filteredMembers = members.Where(m => m.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+        }
+        else
+        {
+            filteredMembers = members;
+        }
+    }
+}

@@ -14,7 +14,7 @@
 
         public int? Duration { get; set; }
 
-        public bool? IsActive { get; set; }
+        public bool IsActive { get; set; }
 
         public virtual ICollection<MemberPackage>? MemberPackage { get; set; }
     }

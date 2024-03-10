@@ -18,7 +18,7 @@ namespace Membership_Management_UI.Services
             formData.Add(new StringContent(entity.PackagePrice?.ToString() ?? ""), "PackagePrice");
             formData.Add(new StringContent(entity.PaymentType ?? ""), "PaymentType");
             formData.Add(new StringContent(entity.Duration?.ToString() ?? ""), "Duration");
-            formData.Add(new StringContent(entity.IsActive?.ToString() ?? ""), "IsActive");
+            formData.Add(new StringContent(entity.IsActive.ToString() ?? ""), "IsActive");
 
 
             var response = await _httpClient.PostAsync("api/Package", formData);
@@ -50,7 +50,7 @@ namespace Membership_Management_UI.Services
             formData.Add(new StringContent(entity.PackagePrice?.ToString() ?? ""), "PackagePrice");
             formData.Add(new StringContent(entity.PaymentType ?? ""), "PaymentType");
             formData.Add(new StringContent(entity.Duration?.ToString() ?? ""), "Duration");
-            //formData.Add(new StringContent(entity.IsActive?.ToString() ?? ""), "IsActive");
+            formData.Add(new StringContent(entity.IsActive.ToString() ?? ""), "IsActive");
 
 
             var response = await _httpClient.PutAsync($"api/Package/{id}", formData);

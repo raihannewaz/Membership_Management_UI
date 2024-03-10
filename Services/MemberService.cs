@@ -21,8 +21,6 @@ namespace Membership_Management_UI.Services
         public async Task<List<Member>> GetAllMembers()
         {
             return await _httpClient.GetFromJsonAsync<List<Member>>("api/Member");
-
-   
         }
 
 

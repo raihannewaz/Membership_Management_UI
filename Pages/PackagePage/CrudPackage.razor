@@ -32,13 +32,13 @@
             <label for="duration">Duration</label>
             <InputNumber id="duration" class="form-control" @bind-Value="selectedPackage.Duration" TValue="int?" />
         </div>
-@*         <div class="form-group">
+
+        <div class="form-group">
             <label for="isActive">Is Active</label>
-            <InputCheckbox id="isActive" @bind-Value="selectedPackage.IsActive ?? false" />
-        </div> *@
+            <InputCheckbox id="isActive" class="form-check-input" @bind-Value="selectedPackage.IsActive" />
+        </div>
 
-
-
+        <br /><br />
         <button type="submit" class="btn btn-primary">@((selectedPackage != null) ? "Update" : "Add")</button>
         <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
     </EditForm>
@@ -55,6 +55,8 @@
                 <th>Package Price</th>
                 <th>Payment Type</th>
                 <th>Duration</th>
+                <th>IsActive</th>
+                <th>Action</th>
                 <th></th>
             </tr>
         </thead>
@@ -67,6 +69,7 @@
                     <td>@package.PackagePrice</td>
                     <td>@package.PaymentType</td>
                     <td>@package.Duration</td>
+                    <td>@isActiveStatuses[package.IsActive]</td>
                     <td>
                         <button class="btn btn-primary" @onclick="() =>  EditPackage(package)">Edit</button>
                         <button class="btn btn-danger" @onclick="() =>  DeletePackage(package.PackageId)">Delete</button>
@@ -125,4 +128,11 @@
         await jsRun.InvokeVoidAsync("location.reload");
         
     }
+
+    private readonly Dictionary<bool, string> isActiveStatuses = new Dictionary<bool, string>()
+    {
+        { true, "Active" },
+        { false, "Inactive" }
+    };
+
 }

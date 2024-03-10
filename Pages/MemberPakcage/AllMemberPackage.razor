@@ -1,0 +1,153 @@
+﻿@page "/allMemberPackage"
+@using Membership_Management_UI.Services
+@using Membership_Management_UI.Models
+@inject IJSRuntime JsRuntime
+@inject IMemberService mService
+@inject IPackageService pService
+
+
+
+<div class="row">
+    <div class="col-lg-9">
+        <h3>All Member Packages</h3>
+    </div>
+    <div class="col-lg-3 text-right">
+        <a href="/addMemberPackage" role="button" class="btn btn-secondary btn-sm">Assign Package</a>
+    </div>
+</div>
+
+@if (mpack == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Member Name</th>
+                <th>Package</th>
+                <th>Quantity</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (mpack.Any())
+            {
+                @foreach (var m in mpack)
+                {
+                    <tr>
+                        <td>@GetMemberName(m.MemberID)</td>
+                        <td>@GetPackageName(m.PackageID)</td>
+                        <td>@m.Quantity</td>
+                        <td>@m.StartDate</td>
+                        <td>@m.EndDate</td>
+                        <td>@isActiveStatuses[m.IsActive ?? false]</td>
+
+                        <td>
+                            <button @onclick="() => EditMember(m.MemberPackageID)" class="edit-button">
+                                Edit
+                            </button>
+                            <button @onclick="@(() => ShowAlert("Sure to Delete??", m.MemberPackageID))" class="btn-outline-danger">
+                                Delete
+                            </button>
+                            <a href="/member-details/@m.MemberPackageID" class="btn btn-info btn-sm">Details</a>
+
+                        </td>
+
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6">No members found.</td>
+                </tr>
+            }
+
+
+        </tbody>
+    </table>
+}
+
+
+@code {
+    public List<MemberPackage> mpack;
+    private MemberPackage editMPack;
+    private List<Member> members = new List<Member>(); 
+    private List<Package> packages = new List<Package>();
+
+
+    [Inject]
+    private IMemberPackageService service { get; set; }
+
+    [Inject]
+    private NavigationManager navigation { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        mpack = await service.GetAll();
+        members = await mService.GetAllMembers();
+        packages = await pService.GetAll();
+    }
+
+    private async Task ShowAlert(string message, int id)
+    {
+        await JsRuntime.InvokeAsync<object>("alert", message);
+        DeleteMember(id);
+    }
+
+
+    public async void DeleteMember(int id)
+    {
+        try
+        {
+            await service.Delete(id);
+            await JsRuntime.InvokeVoidAsync("location.reload");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error Delete Member Package: {ex.Message}");
+        }
+    }
+
+    private async void EditMember(int packId)
+    {
+        //navigation.NavigateTo($"/editMember/{packId}");
+        try
+        {
+            editMPack = await service.GetById(packId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading Member package: {ex.Message}");
+        }
+    }
+
+
+    private readonly Dictionary<bool, string> isActiveStatuses = new Dictionary<bool, string>()
+    {
+        { true, "Active" },
+        { false, "Inactive" }
+    };
+
+    private string GetMemberName(int memberId)
+    {
+        var member = members.FirstOrDefault(m => m.MemberId == memberId);
+        return member != null ? member.Name : "N/A";
+    }
+
+    private string GetPackageName(int packageId)
+    {
+        var package = packages.FirstOrDefault(p => p.PackageId == packageId);
+        return package != null ? package.PackageName : "N/A";
+    }
+
+
+}
+
+

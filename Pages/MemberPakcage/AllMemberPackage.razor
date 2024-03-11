@@ -48,13 +48,10 @@ else
                         <td>@isActiveStatuses[m.IsActive ?? false]</td>
 
                         <td>
-                            <button @onclick="() => EditMember(m.MemberPackageID)" class="edit-button">
-                                Edit
-                            </button>
                             <button @onclick="@(() => ShowAlert("Sure to Delete??", m.MemberPackageID))" class="btn-outline-danger">
                                 Delete
                             </button>
-                            <a href="/member-details/@m.MemberPackageID" class="btn btn-info btn-sm">Details</a>
+                            <a href="/member-details/@m.MemberID" class="btn btn-info btn-sm">Details</a>
 
                         </td>
 
@@ -115,18 +112,7 @@ else
         }
     }
 
-    private async void EditMember(int packId)
-    {
-        //navigation.NavigateTo($"/editMember/{packId}");
-        try
-        {
-            //editMPack = await service.GetById(packId);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading Member package: {ex.Message}");
-        }
-    }
+    
 
 
     private readonly Dictionary<bool, string> isActiveStatuses = new Dictionary<bool, string>()

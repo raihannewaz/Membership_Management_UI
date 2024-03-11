@@ -14,15 +14,15 @@ namespace Membership_Management_UI.Models
 
         public int MemberId { get; set; }
 
-        [JsonIgnore]
-        public Member? Member { get; set; }
+
+        public string Member { get; set; }
 
         public string? ActionType { get; set; }
         public DateTime? ActionDate { get; set; }
 
-        [NotMapped]
+
         public IBrowserFile? NidFile { get; set; }
-        [NotMapped]
+
         public IBrowserFile? UtilityFile { get; set; }
 
 

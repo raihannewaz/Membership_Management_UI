@@ -5,6 +5,7 @@ namespace Membership_Management_UI.Services
     public interface IMemberService
     {
         Task<List<Member>> GetAllMembers();
+        Task<List<Member>> GetMembersWithPack();
         Task<Member> GetMember(int id);
         Task<Member> AddMember(Member member);
         Task<Member> UpdateMember(int id, Member member);

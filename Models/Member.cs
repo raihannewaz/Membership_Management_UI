@@ -13,7 +13,8 @@ namespace Membership_Management_UI.Models
         public string? PresentAddress { get; set; }
         public string? PermanentAddress { get; set; }
         public string? Photo { get; set; }
-        public decimal? MembershipAmount { get; set; }
+
+
         public DateTime? Dob { get; set; }
         public DateTime? CreateDate { get; set; }
         public DateTime? ActivaitonDate { get; set; }
@@ -23,10 +24,7 @@ namespace Membership_Management_UI.Models
         public string? ActionType { get; set; }
         public DateTime? ActionDate { get; set; }
 
-        public virtual ICollection<Document>? DocumentList { get; set; }
-        public virtual ICollection<FeeCollection>? FeeCollection { get; set; }
 
-        [NotMapped]
         public IBrowserFile? ImageFile { get; set; }
 
 

@@ -3,8 +3,10 @@
 @using Membership_Management_UI.Models
 @inject IMemberService mService
 @inject IDocumentService dService
-@inject IFeeCollectionService fService
+@inject IPaymentService fService
 @inject IJSRuntime JsRuntime
+@inject IMemberPackageService mpService
+@inject IPackageService pService
 
 
 @if (member == null)
@@ -26,7 +28,6 @@ else
                                 <p><strong>Account Create Date: </strong>@member.CreateDate</p>
                                 <p><strong>Membership Activate Date: </strong>@member.ActivaitonDate</p>
                                 <p><strong>Membership Expire Date: </strong>@member.ExpDate</p>
-                                <p><strong>Membership Amount: </strong>@member.MembershipAmount</p>
                                 <p><strong>Status: </strong>@isActiveStatuses[member.IsActive ?? false]</p>
 
                             </div>
@@ -124,6 +125,61 @@ else
                 </div>
             </div>
         </div>
+        <div class="card mb-2">
+            @if (nextPaymentDate != null)
+            {
+                <p>Next Payment Date: @nextPaymentDate.Value.ToShortDateString()</p>
+            }
+            else
+            {
+                <p>No next payment date available.</p>
+            }
+
+        </div>
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white d-flex">
+                <h4 class="card-title">Member Packages</h4>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Package</th>
+                                <th>Quantity</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (pack.Any())
+                            {
+                                @foreach (var p in pack)
+                                {
+                                    <tr>
+                                        <td>@p.Package.PackageName</td>
+                                        <td>@p.Quantity</td>
+                                        <td>@p.StartDate</td>
+                                        <td>@p.EndDate</td>
+                                        <td>@isActiveStatuses[p.IsActive ?? false]</td>
+                                       
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4">No Package Assigned.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="card mb-3">
             <div class="card-header bg-primary text-white d-flex">
                 <h4 class="card-title">Fee Collected</h4>
@@ -144,9 +200,11 @@ else
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Collection Date</th>
+                                <th>Payment Date</th>
+                                <th>MemberPackage ID</th>
                                 <th>Collection Type</th>
-                                <th>Amount</th>
+                                <th>Amount Paid</th>
+                                <th>Advance Payment Duration</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -155,17 +213,19 @@ else
                                 @foreach (var feeCollection in filteredFeeCollections)
                                 {
                                     <tr>
-                                        <td>@feeCollection.CollectionDate.ToShortDateString()</td>
-                                        <td>@feeCollection.CollectionType</td>
-                                        <td>@feeCollection.Amount</td>
-                                       
+                                        <td>@feeCollection.PaymentDate.ToShortDateString()</td>
+                                        <td>@feeCollection.MemberPackageID</td>
+                                        <td>@feeCollection.PaymentType</td>
+                                        <td>@feeCollection.ActualAmount</td>
+                                        <td>@feeCollection.AdvancePaymentDuration</td>
+
                                     </tr>
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="4">No fee collections found.</td>
+                                    <td colspan="4">No fee collected.</td>
                                 </tr>
                             }
                         </tbody>
@@ -188,7 +248,9 @@ else
     public int Id { get; set; }
 
     private Member member;
-    private List<FeeCollection> fee;
+    private List<Payment> fee;
+    private List<MemberPackage> pack;
+    //private List<MemberPackage> memberPackages = new List<MemberPackage>();
 
 
 
@@ -197,7 +259,7 @@ else
 
     private DateTime? startDate;
     private DateTime? endDate;
-
+    private DateTime? nextPaymentDate;
 
     string nid;
     string utility;
@@ -209,9 +271,29 @@ else
         member = await mService.GetMember(Id);
         nid = await dService.GetNidOfMember(Id);
         utility = await dService.GetUtilityOfMember(Id);
-        fee = await fService.GetCollectedFeeById(Id);
+        fee = await fService.GetByMember(Id);
+        pack = await mpService.GetById(Id);
+        nextPaymentDate = await fService.GetNextPaymentDate(Id);
+
+
+        foreach (var memberPackage in pack)
+        {
+            memberPackage.Package = await pService.GetById(memberPackage.PackageID);
+        }
 
     }
+
+
+
+
+
+
+
+        
+        
+    
+
+
 
     private async Task ShowAlert(string message, int id)
     {
@@ -296,24 +378,25 @@ else
     }
 
 
-    private List<FeeCollection> filteredFeeCollections
+    private List<Payment> filteredFeeCollections
     {
         get
         {
-            var filteredList = fee ?? new List<FeeCollection>();
+            var filteredList = fee ?? new List<Payment>();
 
             if (startDate.HasValue)
             {
-                filteredList = filteredList.Where(fc => fc.CollectionDate >= DateTime.Parse(startDate.ToString())).ToList();
+                filteredList = filteredList.Where(fc => fc.PaymentDate >= DateTime.Parse(startDate.ToString())).ToList();
             }
 
             if (endDate.HasValue)
             {
-                filteredList = filteredList.Where(fc => fc.CollectionDate <= DateTime.Parse(endDate.ToString())).ToList();
+                filteredList = filteredList.Where(fc => fc.PaymentDate <= DateTime.Parse(endDate.ToString())).ToList();
             }
 
             return filteredList;
         }
     }
+    
 
 }

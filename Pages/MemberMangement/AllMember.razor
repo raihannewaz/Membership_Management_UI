@@ -26,7 +26,7 @@ else
                 <th>Photo</th>
                 <th>Name</th>
                 <th>Phone</th>  
-                <th>Membership Amount</th>
+                <th>Acount Create Date</th>
                 <th>Status</th>
                 <th>Actions</th>
             </tr>
@@ -40,7 +40,7 @@ else
                         <td><img src="@GetImageUrl(m.Photo)" alt="@m.Name" style="max-width: 70px;" /></td>
                         <td>@m.Name</td>
                         <td>@m.Phone</td>
-                        <td>@m.MembershipAmount</td>
+                        <td>@m.CreateDate.ToString()</td>
                         <td>@isActiveStatuses[m.IsActive ?? false]</td>
 
                         <td>

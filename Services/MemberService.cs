@@ -47,7 +47,7 @@ namespace Membership_Management_UI.Services
             formData.Add(new StringContent(member.PresentAddress ?? ""), "PresentAddress");
             formData.Add(new StringContent(member.PermanentAddress ?? ""), "PermanentAddress");
             formData.Add(new StringContent(member.Dob.ToString() ?? ""), "Dob");
-            formData.Add(new StringContent(member.MembershipAmount?.ToString() ?? ""), "MembershipAmount");
+
 
             if (member.ImageFile != null)
             {
@@ -76,7 +76,6 @@ namespace Membership_Management_UI.Services
             formData.Add(new StringContent(member.PresentAddress ?? ""), "PresentAddress");
             formData.Add(new StringContent(member.PermanentAddress ?? ""), "PermanentAddress");
             formData.Add(new StringContent(member.Dob.ToString() ?? ""), "Dob");
-            formData.Add(new StringContent(member.MembershipAmount?.ToString() ?? ""), "MembershipAmount");
             formData.Add(new StringContent(member.IsActive?.ToString() ?? ""), "IsActive");
 
 
@@ -97,5 +96,9 @@ namespace Membership_Management_UI.Services
 
         }
 
+        public async Task<List<Member>> GetMembersWithPack()
+        {
+            return await _httpClient.GetFromJsonAsync<List<Member>>("/member-with-package");
+        }
     }
 }

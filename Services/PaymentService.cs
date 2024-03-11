@@ -41,5 +41,34 @@ namespace Membership_Management_UI.Services
         {
             return await _httpClient.GetFromJsonAsync<List<Payment>>($"api/Payment/{id}");
         }
+
+
+
+
+        public async Task<DateTime?> GetNextPaymentDate(int memberId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<DateTime?>($"next-payment/{memberId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<List<(string Name, string PackageName, DateTime NextPaymentDate)>> GetNextPaymentDates()
+        {
+            try
+            {
+                var nextPaymentDates = await _httpClient.GetFromJsonAsync<List<(string, string, DateTime)>>("nextPaymentDates");
+                return nextPaymentDates;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to retrieve next payment dates. " + ex.Message);
+            }
+        }
     }
 }

@@ -7,6 +7,7 @@
 @inject IPackageService pService
 @inject IMemberService memberService
 @inject IMemberPackageService mpService
+@inject IPackageService pService
 @inject IJSRuntime jsRuntime
 
 <div class="container">
@@ -25,41 +26,27 @@
                         <form class="needs-validation" @onsubmit="SubmitForm" novalidate>
                             <div class="form-group">
                                 <label for="MemberId">Member</label>
-                                <input type="text" class="form-control" placeholder="Search members" @oninput="FilterMembers" />
-                                <select class="form-control mt-2" id="MemberId" @bind="selectedMemberId" required>
+                                <input type="text" class="form-control" placeholder="Search members" />
+                                <select class="form-control mt-2" id="MemberId" @bind="payment.MemberPackageID" required>
                                     <option value="">Select a member</option>
-                                    @foreach (var member in filteredMembers)
+                                    @foreach (var memberPackage in memberPackages)
                                     {
-                                        <option value="@member.MemberId">@member.Name</option>
+                                        <option value="@memberPackage.MemberPackageID">
+                                            @if (memberPackage != null && memberPackage.Member != null && memberPackage.Package !=null)
+                                            {
+                                                <span>@memberPackage.Member.Name -> @memberPackage.Package.PackageName</span>
+                                            }
+                                            else
+                                            {
+                                                <span>N/A</span>
+                                            }
+                                        </option>
                                     }
                                 </select>
 
 
 
                                 <div class="invalid-feedback">Please select a member.</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="MemberPackageId">Member Package</label>
-                                <select class="form-control" id="MemberPackageId" @bind="payment.MemberPackageID" required>
-                                    <option value="">Select a member package</option>
-
-                                        @foreach (var memberPackage in filteredMemberPackages)
-                                        {
-                                            <option value="@memberPackage.MemberPackageID">
-                                                @if (memberPackage.Package != null)
-                                                {
-                                                    @memberPackage.Package.PackageName
-                                                }
-                                                else
-                                                {
-                                                    <span>Package Not Available</span>
-                                                }
-                                            </option>
-                                        }
-                                    
-                                </select>
-                                <div class="invalid-feedback">Please select a member package.</div>
                             </div>
 
 
@@ -135,22 +122,26 @@
                                     <td>
                                         @if (payment.MemberPackage != null && payment.MemberPackage.Member != null)
                                         {
-                                            @payment.MemberPackage.Member.Name
+                                            @payment.MemberPackage.MemberID
                                         }
                                         else
                                         {
                                             <span>N/A</span>
+
+                                            @if (payment.MemberPackage == null)
+                                            {
+                                                Console.WriteLine("MemberPackage is null");
+                                            }
+                                            else if (payment.MemberPackage.Member == null)
+                                            {
+                                                Console.WriteLine("Member is null");
+                                            }
                                         }
                                     </td>
                                 </tr>
                             }
                         }
-                        else
-                        {
-                            <tr>
-                                <td colspan="4">No payments found.</td>
-                            </tr>
-                        }
+
                     </tbody>
                 </table>
             }
@@ -162,9 +153,9 @@
     private Payment payment = new Payment();
     private List<Payment> payments;
     private List<MemberPackage> memberPackages = new List<MemberPackage>();
-    private List<Member> members = new List<Member>();
+    private List<Member> members;
+    private List<Package> pack = new List<Package>();
     private List<Member> filteredMembers = new List<Member>();
-
     private string errorMessage;
     private DateTime? startDate;
     private DateTime? endDate;
@@ -177,15 +168,41 @@
         try
         {
             payments = await paymentService.GetAll();
-            members = await memberService.GetAllMembers();
             memberPackages = await mpService.GetAll();
-            filteredMembers = members;
+            //members = await memberService.GetAllMembers();
+            //pack = await pService.GetAll();
+
+
+            foreach (var memberPackage in memberPackages)
+            {
+                memberPackage.Member = await memberService.GetMember(memberPackage.MemberID);
+                memberPackage.Package = await pService.GetById(memberPackage.PackageID);
+            }
+
+            foreach (var pay in payments)
+            {
+                if (pay.MemberPackage != null)
+                {
+                    pay.MemberPackage.Member = await memberService.GetMember(pay.MemberPackage.MemberID);
+                }
+            }
+
+
         }
         catch (Exception ex)
         {
             errorMessage = "Error loading data: " + ex.Message;
         }
     }
+
+
+    // Assuming dbContext is your DbContext instance
+
+
+
+
+
+
 
     private async Task SubmitForm()
     {
@@ -202,7 +219,6 @@
             }
         }
     }
-
 
     private bool IsValidForm()
     {
@@ -227,46 +243,50 @@
         return isValid;
     }
 
-    private void FilterMembers(ChangeEventArgs e)
-    {
-        string searchText = e.Value?.ToString() ?? "";
 
-        if (!string.IsNullOrWhiteSpace(searchText))
-        {
-            filteredMemberPackages = memberPackages.Where(mp => mp.MemberID == selectedMemberId).ToList();
-        }
-        else
-        {
-            filteredMembers = members;
-        }
-    }
 
     private async Task OnSelectedMemberChanged()
     {
         try
         {
-
-
-            filteredMemberPackages = await mpService.GetById(selectedMemberId);
-
-
-            if (filteredMemberPackages != null && filteredMemberPackages.Any())
+            if (selectedMemberId != 0)
             {
-                payment.MemberPackageID = filteredMemberPackages.First().MemberPackageID;
+                filteredMemberPackages = await mpService.GetById(selectedMemberId);
+                if (filteredMemberPackages != null && filteredMemberPackages.Any())
+                {
+                    payment.MemberPackageID = filteredMemberPackages.First().MemberPackageID;
+                }
+                else
+                {
+                    payment.MemberPackageID = 0;
+                }
             }
             else
             {
+                filteredMemberPackages.Clear();
                 payment.MemberPackageID = 0;
             }
+
+            Console.WriteLine($"Filtered member packages count: {filteredMemberPackages.Count}");
         }
         catch (Exception ex)
         {
             errorMessage = "Error retrieving member packages: " + ex.Message;
+            Console.WriteLine(errorMessage); 
         }
     }
 
 
 
+    private int SelectedMemberId
+    {
+        get => selectedMemberId;
+        set
+        {
+            selectedMemberId = value;
+            OnSelectedMemberChanged();
+        }
+    }
 
     private List<Payment> filteredPayments
     {

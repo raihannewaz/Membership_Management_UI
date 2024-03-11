@@ -25,8 +25,15 @@
             <InputNumber id="packagePrice" class="form-control" @bind-Value="selectedPackage.PackagePrice" TValue="decimal?" />
         </div>
         <div class="form-group">
-            <label for="paymentType">Payment Type</label>
-            <InputText id="paymentType" class="form-control" @bind-Value="selectedPackage.PaymentType" />
+            <label for="CollectionType">Collection Type</label>
+            <select class="form-control" id="CollectionType" @bind="selectedPackage.PaymentType" required>
+                <option value="">Select Type</option>
+                @foreach (var type in Enum.GetValues(typeof(ECollectType)))
+                {
+                    <option value="@type.ToString()">@type</option>
+                }
+            </select>
+            <div class="invalid-feedback">Please select a member.</div>
         </div>
         <div class="form-group">
             <label for="duration">Duration</label>
@@ -135,4 +142,10 @@
         { false, "Inactive" }
     };
 
+
+    public enum ECollectType
+    {
+        Daily,
+        Monthly
+    }
 }
